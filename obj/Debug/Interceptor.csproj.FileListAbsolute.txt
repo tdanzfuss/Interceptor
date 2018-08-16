@@ -3,3 +3,4 @@ C:\Projects\Nedbank\Reflector\bin\Debug\Interceptor.pdb
 C:\Projects\Nedbank\Reflector\obj\Debug\Interceptor.csprojResolveAssemblyReference.cache
 C:\Projects\Nedbank\Reflector\obj\Debug\Interceptor.dll
 C:\Projects\Nedbank\Reflector\obj\Debug\Interceptor.pdb
+C:\Projects\Nedbank\Reflector\bin\Debug\Newtonsoft.Json.dll

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Configuration;
+using Newtonsoft.Json.Linq;
 
 namespace Interceptor
 {
@@ -32,25 +33,16 @@ namespace Interceptor
                 string dataType = "";
 
                 joRedirect = context.Request["joRedirect"];
+                // If JWT is in header, then replace
+                joRedirect = setJWTToken(joRedirect, headerValue);
 
-                //if (!string.IsNullOrEmpty(nvc["joRedirect"]))
-                //{
-                //    joRedirect = nvc["joRedirect"];
-                //}
-
+                // If the POST message specifies a new redirect path then use that instead of default configured path
+                if (!String.IsNullOrEmpty(context.Request["redirectPath"]))
+                {
+                    landingPage = context.Request["redirectPath"];
+                }
                 context.Response.Write(string.Format(generateScriptTags(), setLocalStorage("actionType", joRedirect), getRedirectionUrl(landingPage)));
 
-
-                //if (!string.IsNullOrWhiteSpace(headerValue))
-                //{
-                //    headerValue = string.Format(headerText, headerKey, headerValue);
-                //    context.Response.Write(string.Format(generateScriptTags(), setLocalStorage(headerKey, headerValue), getRedirectionUrl(landingPage)));
-                //}
-                //else
-                //{
-                //    context.Response.Write(string.Format(generateScriptTags(), string.Empty, getRedirectionUrl(errorPage)));
-                   
-                //}
             }
             catch (HttpRequestValidationException validatorEx)
             {
@@ -66,15 +58,16 @@ namespace Interceptor
             }
         }
 
-        private string getAuthToken(HttpContext context)
+        private string setJWTToken(string joRedirect, string headerValue)
         {
-            // if the Authtoken is in the header, then get it
-            if ((context.Request.Headers["Authorization"] != null) && (context.Request.Headers["Authorization"].Length > 0))
+            if (!String.IsNullOrEmpty(headerValue))
             {
-                return context.Request.Headers["Authorization"].Replace("Bearer ", "");
+                dynamic json = JObject.Parse(joRedirect);
+                json.jwt = headerValue;
+                joRedirect = ((JObject)json).ToString();
             }
-            else
-                return context.Request["authenticationToken"];
+            
+            return joRedirect;
         }
 
         private string generateScriptTags()
