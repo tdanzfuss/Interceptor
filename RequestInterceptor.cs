@@ -16,14 +16,16 @@ namespace Interceptor
             get { return false; }
         }
 
-        
+
         public void ProcessRequest(HttpContext context)
         {
+            string headerKey = ConfigurationManager.AppSettings["AuthHeader"];
+            string landingPage = ConfigurationManager.AppSettings["LandingPage"];
+            string errorPage = ConfigurationManager.AppSettings["ErrorPage"];
+
             try
             {
-                string headerKey = ConfigurationManager.AppSettings["AuthHeader"];
-                string landingPage = ConfigurationManager.AppSettings["LandingPage"];
-                string errorPage = ConfigurationManager.AppSettings["ErrorPage"];
+
                 string headerText = "{0} {1}";
 
                 string headerValue = context.Request.Headers.Get(headerKey);
@@ -31,30 +33,36 @@ namespace Interceptor
                 System.Collections.Specialized.NameValueCollection nvc = context.Request.Form;
                 string joRedirect = "";
                 string dataType = "";
+                string redirectPath = string.Empty;
 
-                joRedirect = context.Request["joRedirect"];
+                // Data is in a FORM post
+                if (context.Request.Form.Count != 0)
+                {
+                    joRedirect = context.Request["joRedirect"];
+                    redirectPath = context.Request["redirectPath"];
+                } else
+                // Data is raw in the body
+                {
+                    string rawBody = new System.IO.StreamReader(context.Request.InputStream).ReadToEnd();
+                    dynamic json = JObject.Parse(rawBody);
+                    joRedirect = Convert.ToString(json.joRedirect);
+                    redirectPath = Convert.ToString(json.redirectPath);
+                }
+                
                 // If JWT is in header, then replace
                 joRedirect = setJWTToken(joRedirect, headerValue);
 
                 // If the POST message specifies a new redirect path then use that instead of default configured path
-                if (!String.IsNullOrEmpty(context.Request["redirectPath"]))
+                if (!String.IsNullOrEmpty(redirectPath))
                 {
-                    landingPage = context.Request["redirectPath"];
+                    landingPage = redirectPath;
                 }
                 context.Response.Write(string.Format(generateScriptTags(), setLocalStorage("actionType", joRedirect), getRedirectionUrl(landingPage)));
-
-            }
-            catch (HttpRequestValidationException validatorEx)
-            {
-                //Log validatorEx.Message
-            }
-            catch (HttpParseException parserEx)
-            {
-                //Log parserEx.Message
             }
             catch (Exception ex)
             {
-                //Log ex.Message
+                // Redirect to the configured error page
+                context.Response.Write(string.Format(generateScriptTags(), getErrorMessageContext(ex), getRedirectionUrl(errorPage)));
             }
         }
 
@@ -84,6 +92,11 @@ namespace Interceptor
         {
             return string.Format("window.location = \"{0}\";", landingPage);
         }
+
+        private string getErrorMessageContext(Exception ex) {
+            return setLocalStorage("errorMessage", ex.ToString());
+        }
+
 
         private string setLocalStorage(string headerKey, string headerValue)
         {
