@@ -25,14 +25,9 @@ namespace Interceptor
 
             try
             {
-
-                string headerText = "{0} {1}";
-
                 string headerValue = context.Request.Headers.Get(headerKey);
 
-                System.Collections.Specialized.NameValueCollection nvc = context.Request.Form;
                 string joRedirect = "";
-                string dataType = "";
                 string redirectPath = string.Empty;
 
                 // Data is in a FORM post
@@ -71,7 +66,7 @@ namespace Interceptor
             if (!String.IsNullOrEmpty(headerValue))
             {
                 dynamic json = JObject.Parse(joRedirect);
-                json.jwt = headerValue;
+                json.jwt = headerValue.Replace("Bearer ",""); // Remove bearer from the Header so we have a clean JWT
                 joRedirect = ((JObject)json).ToString();
             }
             
