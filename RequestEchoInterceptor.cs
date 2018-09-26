@@ -18,7 +18,7 @@ namespace Interceptor
 
         public void ProcessRequest(HttpContext context)
         {
-            string landingPage = ConfigurationManager.AppSettings["LandingPage"];
+            string landingPage = "/BPMStaff/"+ConfigurationManager.AppSettings["LandingPage"];
             string authToken = context.Request.Headers.Get("Authorization"); // JWT must be injected by Webseal
 
             if ((authToken == null) || (authToken.Length <= 0))
