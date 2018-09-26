@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json.Linq;
+using System.Configuration;
 
 namespace Interceptor
 {
@@ -17,7 +18,9 @@ namespace Interceptor
 
         public void ProcessRequest(HttpContext context)
         {
+            string landingPage = ConfigurationManager.AppSettings["LandingPage"];
             string authToken = context.Request.Headers.Get("Authorization"); // JWT must be injected by Webseal
+
             if ((authToken == null) || (authToken.Length <= 0))
             {
                 authToken = "Im not a  JWT...";
@@ -33,7 +36,7 @@ namespace Interceptor
             context.Response.Clear();
             context.Response.Write(string.Format(generateScriptTags(),
                 setLocalStorage("actionType", ((JObject)json).ToString(Newtonsoft.Json.Formatting.None)),
-                getRedirectionUrl(context.Request.Url.AbsolutePath)));
+                getRedirectionUrl(landingPage)));
             context.Response.Flush();
 
         }
@@ -82,7 +85,7 @@ namespace Interceptor
         private string getRedirectionUrl(string landingPage)
         {
             // strip the redirect URL out of the incomming URL
-            return string.Format("window.location = \"{0}\";", landingPage.Replace("/echo.html/",""));
+            return string.Format("window.location = \"{0}\";", landingPage );
         }
 
         private string setLocalStorage(string headerKey, string headerValue)
