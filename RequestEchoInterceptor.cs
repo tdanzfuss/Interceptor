@@ -82,7 +82,7 @@ namespace Interceptor
         private string getRedirectionUrl(string landingPage)
         {
             // strip the redirect URL out of the incomming URL
-            return string.Format("window.location = \"{0}\";", landingPage.Replace("/echo.html",""));
+            return string.Format("window.location = \"{0}\";", landingPage.Replace("/echo.html/",""));
         }
 
         private string setLocalStorage(string headerKey, string headerValue)
