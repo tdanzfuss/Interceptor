@@ -13,7 +13,7 @@ namespace Interceptor
         public bool IsReusable
         {
             get { return false; }
-        }   
+        }
 
         public void ProcessRequest(HttpContext context)
         {
@@ -27,26 +27,15 @@ namespace Interceptor
             json.jwt = authToken; //Set the JWT received from Webseal
             json.dataType = "bpmRedirect"; // determines what to do next in CR1
             json.partyId = getECNNumber(context.Request.Path);
-            //if ((authToken != null) && (authToken.Length > 0))
-            //{            
-                context.Response.Clear();
-                context.Response.Write(context.Request.Path + " <b>REDIRECT WITH JWT: </b>" + authToken);
-                context.Response.Write(string.Format(generateScriptTags(),
-                    setLocalStorage("actionType", ((JObject)json).ToString (Newtonsoft.Json.Formatting.None)),
-                    getRedirectionUrl(context.Request.Url.AbsolutePath)));
-                context.Response.Flush();
-            //}
-            /*if (context.Request.Headers != null && context.Request.Headers.Count > 0)
-            {
-                StringBuilder sb = new StringBuilder();
-                foreach (string key in context.Request.Headers.AllKeys)
-                {
-                    sb.Append(key).Append(" : ").Append(context.Request.Headers[key]).AppendLine();
-                }
-                context.Response.Clear();
-                context.Response.Write(sb.ToString());
-                context.Response.Flush();
-            }*/
+            json.dataModel = JObject.Parse("{}");
+            json.dataModel.workItemId = getWorkItemId(context.Request.Path);
+
+            context.Response.Clear();
+            context.Response.Write(string.Format(generateScriptTags(),
+                setLocalStorage("actionType", ((JObject)json).ToString(Newtonsoft.Json.Formatting.None)),
+                getRedirectionUrl(context.Request.Url.AbsolutePath)));
+            context.Response.Flush();
+
         }
 
         private string getECNNumber(string urlPath)
@@ -65,6 +54,19 @@ namespace Interceptor
                 return "0";
             }
 
+        }
+
+        private string getWorkItemId(string urlPath)
+        {
+            try
+            {
+                int startIdx = urlPath.LastIndexOf('/');
+                return urlPath.Substring(startIdx + 1);
+            }
+            catch (Exception ex)
+            {
+                return "0";
+            }
         }
 
         private string generateScriptTags()
