@@ -24,7 +24,9 @@ namespace Interceptor
             }
 
             dynamic json = JObject.Parse("{}");
-            json.jwt = authToken;
+            json.jwt = authToken; //Set the JWT received from Webseal
+            json.dataType = "bpmRedirect"; // determines what to do next in CR1
+            json.partyId = getECNNumber(context.Request.Path);
             //if ((authToken != null) && (authToken.Length > 0))
             //{            
                 context.Response.Clear();
@@ -45,7 +47,25 @@ namespace Interceptor
                 context.Response.Write(sb.ToString());
                 context.Response.Flush();
             }*/
-        }  
+        }
+
+        private string getECNNumber(string urlPath)
+        {
+            try
+            {
+                string searchPath = "application/";
+                int startIdx = urlPath.LastIndexOf(searchPath);
+                int ecnStartIdx = startIdx + searchPath.Length;
+                int ecnEndIdx = urlPath.IndexOf('/', ecnStartIdx + 1);
+
+                return urlPath.Substring(ecnStartIdx, (ecnEndIdx - ecnStartIdx));
+            }
+            catch (Exception ex)
+            {
+                return "0";
+            }
+
+        }
 
         private string generateScriptTags()
         {
